@@ -16,7 +16,15 @@ import pandas as pd
 
 app = Flask(__name__)
 # Enable CORS for all routes
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000"]}})
+CORS(app, resources={r"/api/*": {
+    "origins": [
+        "http://localhost:3000",
+        "https://fcds-system.vercel.app",
+        "https://fcds-system-git-main-ahmedmohamed2002.vercel.app"
+    ],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type"]
+}})
 
 def create_visualization(data, title, x_label, y_label, x_key, y_key):
     plt.figure(figsize=(12, 6))
