@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify
 from flask_cors import CORS
 from student_analytics import (
     connect_to_mongodb,
@@ -7,12 +7,6 @@ from student_analytics import (
     get_highest_course_grades,
     analyze_student_performance
 )
-import io
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 
 app = Flask(__name__)
 # Enable CORS for all routes
@@ -25,20 +19,6 @@ CORS(app, resources={r"/api/*": {
     "methods": ["GET", "POST", "OPTIONS"],
     "allow_headers": ["Content-Type"]
 }})
-
-def create_visualization(data, title, x_label, y_label, x_key, y_key):
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=data, x=x_key, y=y_key)
-    plt.title(title)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    
-    # Save plot to a bytes buffer
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    plt.close()
-    buf.seek(0)
-    return buf
 
 @app.route('/api/analytics/top-by-level', methods=['GET'])
 def get_top_by_level():
@@ -172,74 +152,6 @@ def get_department_performance():
             })
         
         return jsonify(formatted_results)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/analytics/visualization/<type>/<identifier>', methods=['GET'])
-def get_visualization(type, identifier):
-    try:
-        db = connect_to_mongodb()
-        if db is None:
-            return jsonify({"error": "Database connection failed"}), 500
-
-        if type == 'level':
-            results = analyze_students_by_level(db)
-            for result in results:
-                if result['level'] == identifier:
-                    data = pd.DataFrame(result['topStudents'])
-                    buf = create_visualization(
-                        data,
-                        f'Top Students in {identifier} Level',
-                        'Student Name',
-                        'CGPA',
-                        'studentName',
-                        'cgpa'
-                    )
-                    return send_file(buf, mimetype='image/png')
-
-        elif type == 'department':
-            results = analyze_students_by_department(db)
-            for result in results:
-                if result['department'] == identifier:
-                    data = pd.DataFrame(result['topStudents'])
-                    buf = create_visualization(
-                        data,
-                        f'Top Students in {identifier} Department',
-                        'Student Name',
-                        'CGPA',
-                        'studentName',
-                        'cgpa'
-                    )
-                    return send_file(buf, mimetype='image/png')
-
-        elif type == 'courses':
-            results = get_highest_course_grades(db)
-            data = pd.DataFrame(results)
-            buf = create_visualization(
-                data,
-                'Top Courses by Highest Marks',
-                'Course Code',
-                'Highest Mark',
-                '_id',
-                'highestMark'
-            )
-            return send_file(buf, mimetype='image/png')
-
-        elif type == 'performance':
-            results = analyze_student_performance(db)
-            data = pd.DataFrame(results)
-            buf = create_visualization(
-                data,
-                'Department Performance',
-                'Department',
-                'Average Mark',
-                '_id',
-                'departmentAverage'
-            )
-            return send_file(buf, mimetype='image/png')
-
-        return jsonify({"error": "Visualization not found"}), 404
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
