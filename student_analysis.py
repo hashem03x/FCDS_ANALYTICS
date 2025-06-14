@@ -2,10 +2,12 @@ from pymongo import MongoClient
 import pandas as pd
 from typing import List, Dict
 import json
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # MongoDB connection string
 MONGO_URI = "mongodb+srv://marwaagamy:77d1hkPmMEnFUSrJ@cluster0.fed1s.mongodb.net/college-system?retryWrites=true&w=majority"
@@ -129,10 +131,6 @@ def analyze_student_performance():
 
     except Exception as e:
         return {"error": str(e)}
-
-@app.route('/')
-def home():
-    return render_template('index.html')
 
 @app.route('/api/analysis')
 def get_analysis():
