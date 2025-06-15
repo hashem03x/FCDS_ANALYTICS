@@ -100,14 +100,30 @@ def analyze_student_performance():
                 "total_students": len(df),
                 "cgpa_stats": df['CGPA'].describe().to_dict()
             },
-            "department_stats": df.groupby('Department').agg({
-                'CGPA': ['count', 'mean', 'min', 'max'],
-                'Student ID': 'count'
-            }).round(2).to_dict(),
-            "level_stats": df.groupby('Academic Level').agg({
-                'CGPA': ['count', 'mean', 'min', 'max'],
-                'Student ID': 'count'
-            }).round(2).to_dict(),
+            "department_stats": {
+                dept: {
+                    "student_count": stats[('Student ID', 'count')],
+                    "cgpa_mean": stats[('CGPA', 'mean')],
+                    "cgpa_min": stats[('CGPA', 'min')],
+                    "cgpa_max": stats[('CGPA', 'max')]
+                }
+                for dept, stats in df.groupby('Department').agg({
+                    'CGPA': ['count', 'mean', 'min', 'max'],
+                    'Student ID': 'count'
+                }).round(2).to_dict().items()
+            },
+            "level_stats": {
+                level: {
+                    "student_count": stats[('Student ID', 'count')],
+                    "cgpa_mean": stats[('CGPA', 'mean')],
+                    "cgpa_min": stats[('CGPA', 'min')],
+                    "cgpa_max": stats[('CGPA', 'max')]
+                }
+                for level, stats in df.groupby('Academic Level').agg({
+                    'CGPA': ['count', 'mean', 'min', 'max'],
+                    'Student ID': 'count'
+                }).round(2).to_dict().items()
+            },
             "top_5_overall": df.nlargest(5, 'CGPA')[['Name', 'Department', 'Academic Level', 'CGPA']].to_dict('records'),
             "top_10_by_department": {},
             "top_10_by_dept_level": {}
