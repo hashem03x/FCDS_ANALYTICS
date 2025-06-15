@@ -95,6 +95,16 @@ def analyze_student_performance():
         df = pd.DataFrame(all_students)
 
         # Prepare the analysis results
+        dept_agg = df.groupby('Department').agg({
+            'CGPA': ['count', 'mean', 'min', 'max'],
+            'Student ID': 'count'
+        }).round(2)
+
+        level_agg = df.groupby('Academic Level').agg({
+            'CGPA': ['count', 'mean', 'min', 'max'],
+            'Student ID': 'count'
+        }).round(2)
+
         analysis_results = {
             "overall_stats": {
                 "total_students": len(df),
@@ -102,27 +112,21 @@ def analyze_student_performance():
             },
             "department_stats": {
                 dept: {
-                    "student_count": stats[('Student ID', 'count')],
-                    "cgpa_mean": stats[('CGPA', 'mean')],
-                    "cgpa_min": stats[('CGPA', 'min')],
-                    "cgpa_max": stats[('CGPA', 'max')]
+                    "student_count": int(dept_agg.loc[dept, ('Student ID', 'count')]),
+                    "cgpa_mean": float(dept_agg.loc[dept, ('CGPA', 'mean')]),
+                    "cgpa_min": float(dept_agg.loc[dept, ('CGPA', 'min')]),
+                    "cgpa_max": float(dept_agg.loc[dept, ('CGPA', 'max')])
                 }
-                for dept, stats in df.groupby('Department').agg({
-                    'CGPA': ['count', 'mean', 'min', 'max'],
-                    'Student ID': 'count'
-                }).round(2).to_dict().items()
+                for dept in df['Department'].unique()
             },
             "level_stats": {
-                level: {
-                    "student_count": stats[('Student ID', 'count')],
-                    "cgpa_mean": stats[('CGPA', 'mean')],
-                    "cgpa_min": stats[('CGPA', 'min')],
-                    "cgpa_max": stats[('CGPA', 'max')]
+                str(level): {
+                    "student_count": int(level_agg.loc[level, ('Student ID', 'count')]),
+                    "cgpa_mean": float(level_agg.loc[level, ('CGPA', 'mean')]),
+                    "cgpa_min": float(level_agg.loc[level, ('CGPA', 'min')]),
+                    "cgpa_max": float(level_agg.loc[level, ('CGPA', 'max')])
                 }
-                for level, stats in df.groupby('Academic Level').agg({
-                    'CGPA': ['count', 'mean', 'min', 'max'],
-                    'Student ID': 'count'
-                }).round(2).to_dict().items()
+                for level in df['Academic Level'].unique()
             },
             "top_5_overall": df.nlargest(5, 'CGPA')[['Name', 'Department', 'Academic Level', 'CGPA']].to_dict('records'),
             "top_10_by_department": {},
